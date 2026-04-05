@@ -29,11 +29,11 @@ app.post('/games/update', (req, res) => {
     timestamp: Date.now()
   };
   
-  console.log(`📝 Update: ${isPlaying ? `Playing ${currentGame}` : 'Not playing'}`);
+  console.log(`Update: ${isPlaying ? `Playing ${currentGame}` : 'Not playing'}`);
   res.json({ success: true });
 });
 
-const PORT = 5000; // ← This should be 5000, not 3000!
+const PORT = 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 Backend running on http://localhost:${PORT}`);
+  console.log(`Running on :${PORT}`);
 });
