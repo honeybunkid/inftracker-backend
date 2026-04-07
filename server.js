@@ -9,31 +9,92 @@ let gameState = {
   currentGame: null,
   isPlaying: false,
   screenshot: null,
-  timestamp: Date.now()
+  timestamp: Date.now(),
+  sessionStartTime: null,  // New: When current game session started
+  playDuration: 0          // New: Total seconds played
 };
 
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'online',
+    message: 'inftracker.live backend',
+    endpoints: {
+      games: '/games',
+      update: '/games/update'
+    },
+    timestamp: Date.now()
+  });
+});
+
 app.get('/games', (req, res) => {
+  // Calculate current play duration if playing
+  let currentDuration = gameState.playDuration;
+  
+  if (gameState.isPlaying && gameState.sessionStartTime) {
+    const elapsedSeconds = Math.floor((Date.now() - gameState.sessionStartTime) / 1000);
+    currentDuration = elapsedSeconds;
+  }
+  
   res.json({
     success: true,
-    data: gameState
+    data: {
+      ...gameState,
+      playDuration: currentDuration
+    }
   });
 });
 
 app.post('/games/update', (req, res) => {
   const { currentGame, isPlaying, screenshot } = req.body;
   
+  const now = Date.now();
+  const previousGame = gameState.currentGame;
+  
+  // Game changed or stopped playing - reset timer
+  if (currentGame !== previousGame) {
+    gameState.sessionStartTime = isPlaying ? now : null;
+    gameState.playDuration = 0;
+    console.log(`game changed: ${previousGame || 'None'} → ${currentGame || 'None'}`);
+  }
+  // Same game, just started playing
+  else if (isPlaying && !gameState.isPlaying) {
+    gameState.sessionStartTime = now;
+    gameState.playDuration = 0;
+  }
+  // Stopped playing
+  else if (!isPlaying && gameState.isPlaying) {
+    gameState.sessionStartTime = null;
+    gameState.playDuration = 0;
+  }
+  
   gameState = {
+    ...gameState,
     currentGame,
     isPlaying,
     screenshot,
-    timestamp: Date.now()
+    timestamp: now
   };
   
-  console.log(`Update: ${isPlaying ? `Playing ${currentGame}` : 'Not playing'}`);
+  const duration = gameState.sessionStartTime 
+    ? Math.floor((now - gameState.sessionStartTime) / 1000)
+    : 0;
+  
+  console.log(`update: ${isPlaying ? `Playing ${currentGame} (${formatTime(duration)})` : 'Not playing'}`);
   res.json({ success: true });
 });
 
-const PORT = 5000;
+function formatTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  
+  if (hours > 0) {
+    return `${hours}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+  return `${minutes}:${String(secs).padStart(2, '0')}`;
+}
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Running on :${PORT}`);
+  console.log(`backend running on ${PORT}`);
 });
