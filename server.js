@@ -10,8 +10,8 @@ let gameState = {
   isPlaying: false,
   screenshot: null,
   timestamp: Date.now(),
-  sessionStartTime: null,  // New: When current game session started
-  playDuration: 0          // New: Total seconds played
+  sessionStartTime: null,  
+  playDuration: 0          
 };
 
 app.get('/', (req, res) => {
