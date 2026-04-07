@@ -27,7 +27,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/games', (req, res) => {
-  // Calculate current play duration if playing
+ 
   let currentDuration = gameState.playDuration;
   
   if (gameState.isPlaying && gameState.sessionStartTime) {
@@ -50,18 +50,18 @@ app.post('/games/update', (req, res) => {
   const now = Date.now();
   const previousGame = gameState.currentGame;
   
-  // Game changed or stopped playing - reset timer
+ 
   if (currentGame !== previousGame) {
     gameState.sessionStartTime = isPlaying ? now : null;
     gameState.playDuration = 0;
     console.log(`game changed: ${previousGame || 'None'} → ${currentGame || 'None'}`);
   }
-  // Same game, just started playing
+  
   else if (isPlaying && !gameState.isPlaying) {
     gameState.sessionStartTime = now;
     gameState.playDuration = 0;
   }
-  // Stopped playing
+  
   else if (!isPlaying && gameState.isPlaying) {
     gameState.sessionStartTime = null;
     gameState.playDuration = 0;
